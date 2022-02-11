@@ -1781,16 +1781,16 @@ class Server{
 	 */
 	public function batchPackets(array $players, array $packets, $forceSync = false){
 		Timings::$playerNetworkTimer->startTiming();
-		$str = "";
+		$buffers = [];
 
 		foreach($packets as $p){
 			if($p instanceof DataPacket){
 				if(!$p->isEncoded){
 					$p->encode();
 				}
-				$str .= Binary::writeInt(strlen($p->buffer)) . $p->buffer;
+				$buffers[] = $p->getBuffer();
 			}else{
-				$str .= Binary::writeInt(strlen($p)) . $p;
+				$buffers[] = $p;
 			}
 		}
 
@@ -1802,20 +1802,25 @@ class Server{
 		}
 
 		if(!$forceSync and $this->networkCompressionAsync){
-			$task = new CompressBatchedTask($str, $targets, $this->networkCompressionLevel);
+			$task = new CompressBatchedTask($buffers, $targets, $this->networkCompressionLevel);
 			$this->getScheduler()->scheduleAsyncTask($task);
 		}else{
-			$this->broadcastPacketsCallback(zlib_encode($str, ZLIB_ENCODING_DEFLATE, $this->networkCompressionLevel), $targets);
+			$pk = new BatchPacket();
+			$pk->packets = $buffers;
+			$pk->compressionLevel = $this->networkCompressionLevel;
+			$pk->encode();
+			$pk->isEncoded = true;
+			$this->broadcastPacketsCallback($pk, $targets);
 		}
 
 		Timings::$playerNetworkTimer->stopTiming();
 	}
 
-	public function broadcastPacketsCallback($data, array $identifiers){
-		$pk = new BatchPacket();
-		$pk->payload = $data;
-		$pk->encode();
-		$pk->isEncoded = true;
+	public function broadcastPacketsCallback(BatchPacket $pk, array $identifiers){
+		if (!$pk->isEncoded) {
+			$pk->encode();
+			$pk->isEncoded = true;
+		}
 
 		foreach($identifiers as $i){
 			if(isset($this->players[$i])){

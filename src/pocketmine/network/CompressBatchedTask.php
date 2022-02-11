@@ -21,32 +21,35 @@
 
 namespace pocketmine\network;
 
+use pocketmine\network\protocol\BatchPacket;
 use pocketmine\scheduler\AsyncTask;
 use pocketmine\Server;
 
 class CompressBatchedTask extends AsyncTask{
-
-	public $level = 7;
-	public $data;
-	public $final;
+	public $packets;
+	public $pk;
 	public $targets;
+	public $level;
 
-	public function __construct($data, array $targets, $level = 7){
-		$this->data = $data;
+	public function __construct(array $packets, array $targets, $level = 7){
+		$this->packets = $packets;
 		$this->targets = $targets;
 		$this->level = $level;
 	}
 
 	public function onRun(){
 		try{
-			$this->final = zlib_encode($this->data, ZLIB_ENCODING_DEFLATE, $this->level);
-			$this->data = null;
+			$this->pk = new BatchPacket();
+			$this->pk->packets = $this->packets;
+			$this->pk->compressionLevel = $this->level;
+			$this->pk->encode();
+			$this->pk->isEncoded = true;
 		}catch(\Throwable $e){
 
 		}
 	}
 
 	public function onCompletion(Server $server){
-		$server->broadcastPacketsCallback($this->final, (array) $this->targets);
+		$server->broadcastPacketsCallback($this->pk, (array) $this->targets);
 	}
 }

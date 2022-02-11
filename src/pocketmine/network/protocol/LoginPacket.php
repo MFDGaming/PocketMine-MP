@@ -41,7 +41,7 @@ class LoginPacket extends DataPacket{
 	public function decode(){
 		$this->protocol = $this->getInt();
 
-		$str = zlib_decode($this->get($this->getInt()), 1024 * 1024 * 64); //Max 64MB
+		$str = $this->get($this->getUnsignedVarInt());
 		$this->setBuffer($str, 0);
 
 		$chainData = json_decode($this->get($this->getLInt()));

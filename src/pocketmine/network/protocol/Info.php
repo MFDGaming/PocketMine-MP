@@ -30,14 +30,14 @@ interface Info{
 	/**
 	 * Actual Minecraft: PE protocol version
 	 */
-	const CURRENT_PROTOCOL = 81;
+	const CURRENT_PROTOCOL = 475;
 
 	const LOGIN_PACKET = 0x01;
 	const PLAY_STATUS_PACKET = 0x02;
 	const SERVER_TO_CLIENT_HANDSHAKE_PACKET = 0x03;
 	const CLIENT_TO_SERVER_HANDSHAKE_PACKET = 0x04;
 	const DISCONNECT_PACKET = 0x05;
-	const BATCH_PACKET = 0x06;
+	const BATCH_PACKET = 0xfe;
 	const TEXT_PACKET = 0x07;
 	const SET_TIME_PACKET = 0x08;
 	const START_GAME_PACKET = 0x09;

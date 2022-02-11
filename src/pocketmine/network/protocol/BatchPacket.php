@@ -21,23 +21,34 @@
 
 namespace pocketmine\network\protocol;
 
+use pocketmine\utils\BinaryStream;
+
 #include <rules/DataPacket.h>
 
 
 class BatchPacket extends DataPacket{
 	const NETWORK_ID = Info::BATCH_PACKET;
 
-	public $payload;
+	public $packets = [];
+	public $compressionLevel = 7;
 
 	public function decode(){
-		$size = $this->getInt();
-		$this->payload = $this->get($size);
+		$this->packets = [];
+		$stream = new BinaryStream(zlib_decode($this->get(true), 1024 * 1024 * 64));
+		while (!$stream->feof()) {
+			$size = $stream->getUnsignedVarInt();
+			$this->packets[] = $stream->get($size);
+		}
 	}
 
 	public function encode(){
 		$this->reset();
-		$this->putInt(strlen($this->payload));
-		$this->put($this->payload);
+		$stream = new BinaryStream();
+		foreach ($this->packets as $packet) {
+			$stream->putUnsignedVarInt(strlen($packet));
+			$stream->put($packet);
+		}
+		$this->put(zlib_encode($stream->getBuffer(), ZLIB_ENCODING_RAW, $this->compressionLevel));
+		$stream->reset();
 	}
-
 }

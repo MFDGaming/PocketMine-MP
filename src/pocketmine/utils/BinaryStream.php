@@ -249,4 +249,36 @@ class BinaryStream extends \stdClass{
 	public function feof(){
 		return !isset($this->buffer[$this->offset]);
 	}
+
+	public function getUnsignedVarInt() {
+		return Binary::readUnsignedVarInt($this->buffer, $this->offset);
+	}
+
+	public function putUnsignedVarInt($v) {
+		$this->put(Binary::writeUnsignedVarInt($v));
+	}
+
+	public function getVarInt() {
+		return Binary::readVarInt($this->buffer, $this->offset);
+	}
+
+	public function putVarInt($v) {
+		$this->put(Binary::writeVarInt($v));
+	}
+
+	public function getUnsignedVarLong() {
+		return Binary::readUnsignedVarLong($this->buffer, $this->offset);
+	}
+
+	public function putUnsignedVarLong($v) {
+		$this->buffer .= Binary::writeUnsignedVarLong($v);
+	}
+
+	public function getVarLong() {
+		return Binary::readVarLong($this->buffer, $this->offset);
+	}
+
+	public function putVarLong($v) {
+		$this->buffer .= Binary::writeVarLong($v);
+	}
 }

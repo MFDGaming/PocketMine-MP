@@ -209,21 +209,13 @@ class Network{
 	}
 
 	public function processBatch(BatchPacket $packet, Player $p){
-		$str = zlib_decode($packet->payload, 1024 * 1024 * 64); //Max 64MB
-		$len = strlen($str);
-		$offset = 0;
 		try{
-			while($offset < $len){
-				$pkLen = Binary::readInt(substr($str, $offset, 4));
-				$offset += 4;
-
-				$buf = substr($str, $offset, $pkLen);
-				$offset += $pkLen;
-
+			foreach ($packet->packets as $buf) {
 				if(($pk = $this->getPacket(ord($buf[0]))) !== null){ // #blameshoghi
 					if($pk::NETWORK_ID === Info::BATCH_PACKET){
 						throw new \InvalidStateException("Invalid BatchPacket inside BatchPacket");
 					}
+					echo($pk::NETWORK_ID . "\n");
 
 					$pk->setBuffer($buf, 1);
 

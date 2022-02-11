@@ -431,4 +431,93 @@ class Binary{
 		return strrev(self::writeLong($value));
 	}
 
+	public static function readVarInt($buffer, &$offset) {
+		$raw = self::readUnsignedVarInt($buffer, $offset);
+		$temp = ((($raw << 63) >> 63) ^ $raw) >> 1;
+		return $temp ^ ($raw & (1 << 63));
+	}
+
+	public static function readUnsignedVarInt($buffer, &$offset) {
+		$value = 0;
+		for($i = 0; $i <= 28; $i += 7){
+			if(!isset($buffer[$offset])){
+				throw new \InvalidArgumentException("No bytes left in buffer");
+			}
+			$b = ord($buffer[$offset++]);
+			$value |= (($b & 0x7f) << $i);
+
+			if(($b & 0x80) === 0){
+				return $value;
+			}
+		}
+
+		throw new \InvalidArgumentException("VarInt did not terminate after 5 bytes!");
+	}
+
+	public static function writeVarInt($v) {
+		$v = ($v << 32 >> 32);
+		return self::writeUnsignedVarInt(($v << 1) ^ ($v >> 31));
+	}
+
+	public static function writeUnsignedVarInt($value) {
+		$buf = "";
+		$remaining = $value & 0xffffffff;
+		for($i = 0; $i < 5; ++$i){
+			if(($remaining >> 7) !== 0){
+				$buf .= chr($remaining | 0x80);
+			}else{
+				$buf .= chr($remaining & 0x7f);
+				return $buf;
+			}
+
+			$remaining = (($remaining >> 7) & (PHP_INT_MAX >> 6)); //PHP really needs a logical right-shift operator
+		}
+
+		throw new \InvalidArgumentException("Value too large to be encoded as a VarInt");
+	}
+
+	public static function readVarLong($buffer, &$offset) {
+		$raw = self::readUnsignedVarLong($buffer, $offset);
+		$temp = ((($raw << 63) >> 63) ^ $raw) >> 1;
+		return $temp ^ ($raw & (1 << 63));
+	}
+
+	public static function readUnsignedVarLong($buffer, &$offset) {
+		$value = 0;
+		for($i = 0; $i <= 63; $i += 7){
+			if(!isset($buffer[$offset])){
+				throw new \InvalidArgumentException("No bytes left in buffer");
+			}
+			$b = ord($buffer[$offset++]);
+			$value |= (($b & 0x7f) << $i);
+
+			if(($b & 0x80) === 0){
+				return $value;
+			}
+		}
+
+		throw new BinaryDataException("VarLong did not terminate after 10 bytes!");
+	}
+
+	public static function writeVarLong($v) {
+		return self::writeUnsignedVarLong(($v << 1) ^ ($v >> 63));
+	}
+
+	public static function writeUnsignedVarLong($value) {
+		$buf = "";
+		$remaining = $value;
+		for($i = 0; $i < 10; ++$i){
+			if(($remaining >> 7) !== 0){
+				$buf .= chr($remaining | 0x80); //Let chr() take the last byte of this, it's faster than adding another & 0x7f.
+			}else{
+				$buf .= chr($remaining & 0x7f);
+				return $buf;
+			}
+
+			$remaining = (($remaining >> 7) & (PHP_INT_MAX >> 6)); //PHP really needs a logical right-shift operator
+		}
+
+		throw new \InvalidArgumentException("Value too large to be encoded as a VarLong");
+	}
+
 }
