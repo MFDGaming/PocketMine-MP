@@ -56,6 +56,12 @@ abstract class Terminal{
 				self::$formattingCodes = false;
 			}else{
 				self::$formattingCodes = ((Utils::getOS() !== "win" and getenv("TERM") != "" and (!function_exists("posix_ttyname") or !defined("STDOUT") or posix_ttyname(STDOUT) !== false)) or isset($opts["enable-ansi"]));
+				if (Utils::getOS() === "win") {
+					$stdout = fopen("php://stdout", "w");
+					sapi_windows_vt100_support($stdout);
+					fclose($stdout);
+					self::$formattingCodes = true;
+				}
 			}
 		}
 
@@ -139,9 +145,8 @@ abstract class Terminal{
 			case "bsd":
 				self::getEscapeCodes();
 				return;
-
-			case "win":
 			case "android":
+			case "win":
 				self::getFallbackEscapeCodes();
 				return;
 		}

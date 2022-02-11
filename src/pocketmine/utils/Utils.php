@@ -352,7 +352,7 @@ class Utils{
 		$secureValue = "";
 		$rounds = 0;
 		$drop = 0;
-		while(!isset($output{$length - 1})){
+		while(!isset($output[$length - 1])){
 			//some entropy, but works ^^
 			$weakEntropy = [
 				is_array($startEntropy) ? implode($startEntropy) : $startEntropy,
@@ -420,7 +420,7 @@ class Utils{
 				//Von Neumann randomness extractor, increases entropy
 				$bitcnt = 0;
 				for($j = 0; $j < 64; ++$j){
-					$a = ord($strongEntropy{$j});
+					$a = ord($strongEntropy[$j]);
 					for($i = 0; $i < 8; $i += 2){
 						$b = ($a & (1 << $i)) > 0 ? 1 : 0;
 						if($b != (($a & (1 << ($i + 1))) > 0 ? 1 : 0)){
@@ -528,7 +528,7 @@ class Utils{
 	public static function javaStringHash($string){
 		$hash = 0;
 		for($i = 0; $i < strlen($string); $i++){
-			$ord = ord($string{$i});
+			$ord = ord($string[$i]);
 			if($ord & 0x80){
 				$ord -= 0x100;
 			}

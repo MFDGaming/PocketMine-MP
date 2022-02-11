@@ -1634,7 +1634,6 @@ class Server{
 				$this->setDefaultLevel($this->getLevelByName($default));
 			}
 
-
 			$this->properties->save(true);
 
 			if(!($this->getDefaultLevel() instanceof Level)){
